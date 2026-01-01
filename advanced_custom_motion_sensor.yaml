@@ -19,16 +19,24 @@ blueprint:
   input:
     motion_entity:
       name: Motion Sensor
-      description: Motion Sensor or a group with Motion Sensors (But can be anything switching between "on" and "off")
+      description: Motion / Presence / Occupancy sensor (must be a binary sensor with device_class motion, presence, or occupancy)
       selector:
         entity:
+          domain: binary_sensor
+          device_class:
+            - motion
+            - occupancy
+            - presence
           multiple: false
     light_target:
-      name: Light
+      name: Light or Switch
+      description: Select the light or switch entity to control
       selector:
-        target:
-          entity:
-            domain: light
+        entity:
+          domain:
+            - light
+            - switch
+          multiple: false
     luminance_sensor:
       name: Illuminance sensor
       description: This sensor will be used to determine the illumination.
@@ -82,7 +90,7 @@ blueprint:
             - Above horizon
     elevation_adjustment:
       name: Sun elevation adjustment (Optional)
-      description: With a postivie number, the sun is further above the horizon. For instance, +10 approximately means the trigger will activate one hour before the sun is below horizon. A negative number moves the trigger further below the horizon.
+      description: With a postivie number, the sun is further above the horizon. For instance, +10 approximately means the trigger will activate one hour before the sun is below horizon. A negative nu[...]
       default: 0
       selector:
         number:
@@ -201,8 +209,8 @@ action:
           - condition: time
             after: !input time_default_start
             before: !input time_default_end
-          - service: light.turn_on
-            target: !input light_target
+          - service: homeassistant.turn_on
+            entity_id: !input light_target
       - conditions:
           - condition: template
             value_template: "{{ trigger.to_state.state == 'off' }}"
@@ -223,5 +231,5 @@ action:
                 sequence:
                   - scene: !input scene_ambient
             default:
-              - service: light.turn_off
-                target: !input light_target
+              - service: homeassistant.turn_off
+                entity_id: !input light_target
