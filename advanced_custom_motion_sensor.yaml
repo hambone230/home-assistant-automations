@@ -24,11 +24,13 @@ blueprint:
         entity:
           multiple: false
     light_target:
-      name: Light
+      name: Light or Switch
       selector:
         target:
           entity:
-            domain: light
+            domain:
+              - light
+              - switch
     luminance_sensor:
       name: Illuminance sensor
       description: This sensor will be used to determine the illumination.
@@ -82,7 +84,7 @@ blueprint:
             - Above horizon
     elevation_adjustment:
       name: Sun elevation adjustment (Optional)
-      description: With a postivie number, the sun is further above the horizon. For instance, +10 approximately means the trigger will activate one hour before the sun is below horizon. A negative number moves the trigger further below the horizon.
+      description: With a postivie number, the sun is further above the horizon. For instance, +10 approximately means the trigger will activate one hour before the sun is below horizon. A negative nu[...]
       default: 0
       selector:
         number:
@@ -201,7 +203,7 @@ action:
           - condition: time
             after: !input time_default_start
             before: !input time_default_end
-          - service: light.turn_on
+          - service: homeassistant.turn_on
             target: !input light_target
       - conditions:
           - condition: template
@@ -223,5 +225,5 @@ action:
                 sequence:
                   - scene: !input scene_ambient
             default:
-              - service: light.turn_off
+              - service: homeassistant.turn_off
                 target: !input light_target
