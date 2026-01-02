@@ -19,7 +19,7 @@ blueprint:
   input:
     motion_entity:
       name: Motion Sensor
-      description: Motion / Presence / Occupancy sensor (must be a binary sensor with device_class motion, presence, or occupancy)
+      description: Motion / Presence / Occupancy / Door / Opening sensor (must be a binary sensor with device_class motion, presence, occupancy, door, or opening)
       selector:
         entity:
           domain: binary_sensor
@@ -27,6 +27,8 @@ blueprint:
             - motion
             - occupancy
             - presence
+            - door
+            - opening
           multiple: false
     light_target:
       name: Light or Switch
@@ -172,10 +174,8 @@ condition:
   - condition: or
     conditions:
       - "{{ automation_blocker == none }}"
-      - "{{ automation_blocker_boolean and states[automation_blocker].state == 'on'
-        }}"
-      - "{{ not automation_blocker_boolean and states[automation_blocker].state == 'off'
-        }}"
+      - "{{ automation_blocker_boolean and states[automation_blocker].state == 'on'\n        }}"
+      - "{{ not automation_blocker_boolean and states[automation_blocker].state == 'off'\n        }}"
   - condition: template
     value_template: >
       {% if 'Always' == elevation %}
@@ -223,10 +223,8 @@ action:
           - condition: or
             conditions:
               - "{{ motion_off_blocker == none }}"
-              - "{{ motion_off_blocker_boolean and states[motion_off_blocker].state == 'on'
-                }}"
-              - "{{ not motion_off_blocker_boolean and states[motion_off_blocker].state == 'off'
-                }}"
+              - "{{ motion_off_blocker_boolean and states[motion_off_blocker].state == 'on'\n                }}"
+              - "{{ not motion_off_blocker_boolean and states[motion_off_blocker].state == 'off'\n                }}"
         sequence:
           - choose:
               - conditions:
