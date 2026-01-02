@@ -38,14 +38,11 @@ blueprint:
             - switch
           multiple: false
     luminance_sensor:
-      name: Illuminance sensor
-      description: This sensor will be used to determine the illumination.
+      name: Illuminance sensor (Optional)
+      description: This sensor will be used to determine the illumination. Leave empty to ignore luminance checks.
       default:
       selector:
-        entity:
-          domain: sensor
-          device_class: illuminance
-          multiple: false
+        entity: {}
     luminance_required:
       name: Required Lux Level
       description: Lux level below which the automation will run.
@@ -202,9 +199,18 @@ action:
       - conditions:
           - condition: template
             value_template: "{{ trigger.to_state.state == 'on' }}"
-          - condition: numeric_state
-            entity_id: !input luminance_sensor
-            below: !input luminance_required
+          - condition: template
+            value_template: >
+              {% if luminance_sensor == none %}
+                true
+              {% else %}
+                {% set sensor = states[luminance_sensor] %}
+                {% if sensor is none or sensor.state in ['unknown','unavailable','none'] %}
+                  false
+                {% else %}
+                  {{ (sensor.state | float(0)) < (luminance_required | float(0)) }}
+                {% endif %}
+              {% endif %}
         sequence:
           - condition: time
             after: !input time_default_start
