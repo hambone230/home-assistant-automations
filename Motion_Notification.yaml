@@ -1,0 +1,55 @@
+blueprint:
+  name: Motion or Door Security Notification (with Conditions)
+  description: >
+    Sends a notification to a specific mobile device when either a motion sensor 
+    is triggered or a door/contact sensor is opened. Includes optional conditions.
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: The motion sensor to monitor.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+    door_sensor:
+      name: Door Sensor
+      description: The door/contact sensor to monitor.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: door
+    notify_device:
+      name: Device to Notify
+      description: The mobile device that will receive the notification.
+      selector:
+        device:
+          integration: mobile_app
+    additional_conditions:
+      name: Optional Conditions
+      description: >
+        Define conditions that must be met for the notification to send 
+        (e.g., "Person is not home" or "Sun is below horizon").
+        Leave empty to always send.
+      default: []
+      selector:
+        condition: {}
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id: !input door_sensor
+    from: "off"
+    to: "on"
+
+condition: !input additional_conditions
+
+action:
+  - domain: mobile_app
+    type: notify
+    device_id: !input notify_device
+    message: "Security Alert: {{ trigger.to_state.name }} has been triggered."
+    title: "Home Security"
