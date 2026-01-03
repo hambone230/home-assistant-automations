@@ -1,8 +1,8 @@
 blueprint:
-  name: Motion or Door Security Notification (with Conditions)
+  name: Motion or Door Security Notification (Conditional)
   description: >
-    Sends a notification to a specific mobile device when either a motion sensor 
-    is triggered or a door/contact sensor is opened. Includes optional conditions.
+    Sends a notification to a mobile device when a motion sensor or door is triggered, 
+    but optionally only if a specific condition is met (e.g., no one is home).
   domain: automation
   input:
     motion_sensor:
@@ -25,15 +25,24 @@ blueprint:
       selector:
         device:
           integration: mobile_app
-    additional_conditions:
-      name: Optional Conditions
+    optional_condition_entity:
+      name: (Optional) Condition Entity
       description: >
-        Define conditions that must be met for the notification to send 
-        (e.g., "Person is not home" or "Sun is below horizon").
-        Leave empty to always send.
+        Select an entity to check before sending the notification. 
+        Example: Select your 'Person' entity or a 'Group' of people.
       default: []
       selector:
-        condition: {}
+        entity: {}
+    optional_condition_state:
+      name: (Optional) Required State
+      description: >
+        The state the entity above must be in to allow the notification. 
+        Example: 'not_home' (for people) or 'on' (for a security switch).
+      default: "not_home"
+    custom_message:
+      name: Notification Message
+      description: The text to send. Use {{ trigger.to_state.name }} to insert the sensor name dynamically.
+      default: "Security Alert: {{ trigger.to_state.name }} has been triggered."
 
 trigger:
   - platform: state
@@ -45,11 +54,25 @@ trigger:
     from: "off"
     to: "on"
 
-condition: !input additional_conditions
+condition:
+  - condition: template
+    value_template: >
+      {% set entity = input_optional_condition_entity %}
+      {% set required_state = input_optional_condition_state %}
+      {% if entity %}
+        {{ states(entity) == required_state }}
+      {% else %}
+        {{ true }}
+      {% endif %}
 
 action:
   - domain: mobile_app
     type: notify
     device_id: !input notify_device
-    message: "Security Alert: {{ trigger.to_state.name }} has been triggered."
+    message: !input custom_message
     title: "Home Security"
+
+# Mapping inputs to variables for the condition template
+variables:
+  input_optional_condition_entity: !input optional_condition_entity
+  input_optional_condition_state: !input optional_condition_state
